@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.IO;
 using System.Linq;
-
+using Twilio;
 using Twilio.Rest.Api.V2010.Account;
 
 namespace secret_santa_sharp
@@ -14,7 +16,11 @@ namespace secret_santa_sharp
          var pickSettings = PickingSettings.LoadSettings();
          MatchSantas(pickSettings);
 
-         //TwilioClient.Init(pickSettings.TwilioSid, pickSettings.TwilioAuthToken);
+         File.WriteAllText(
+            $"ps-{DateTime.Now.ToString("yyyy-dd-M--HH-mm-ss")}.json",
+            JsonConvert.SerializeObject(pickSettings, Formatting.Indented));
+
+         TwilioClient.Init(pickSettings.TwilioSid, pickSettings.TwilioAuthToken);
          SendMessages(pickSettings);
       }
 
@@ -25,11 +31,11 @@ namespace secret_santa_sharp
             var santa = ps.GetSantaById(matchId.Key);
             var match = ps.GetSantaById(matchId.Value);
             
-            var msg = $"Hello {santa.Name}, you have matched with {match.Name}! Merry Christmas!";
+            var msg = $"Hello {santa.Name}, sorry about that the elves got confused. You have matched with {match.Name}! Merry Christmas!";
             Console.WriteLine(msg);
-            Console.WriteLine($"Number={match.PhoneNumber}");
+            Console.WriteLine($"Number={santa.PhoneNumber}");
 
-            //SendText(msg, ps.SenderNumber, match.PhoneNumber);
+            SendText(msg, ps.SenderNumber, santa.PhoneNumber);
          }
       }
 
